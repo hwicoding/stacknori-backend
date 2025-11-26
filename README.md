@@ -37,6 +37,21 @@ ALEMBIC_DATABASE_URL=postgresql+psycopg2://stacknori:stacknori@localhost:5432/st
 ```
 도커 컨테이너 내부에서는 `POSTGRES_SERVER=db` 환경 변수를 그대로 사용하면 된다.
 
+## 초기 관리자 계정 생성
+```bash
+# 기본값으로 실행 (admin@stacknori.com / admin123456)
+python scripts/seed_admin.py
+
+# 환경 변수로 커스터마이징
+ADMIN_EMAIL=admin@example.com \
+ADMIN_PASSWORD=secure_password \
+python scripts/seed_admin.py
+
+# 도커 컨테이너 내부에서 실행
+docker compose exec api python scripts/seed_admin.py
+```
+자세한 내용은 `docs/ROLE_SYSTEM.md`를 참고하세요.
+
 ## 테스트/배포 (로드맵)
 - GitHub Actions CI (lint/test) & docker build 캐시
 - NAS 기반 self-hosted runner에서 compose 배포 자동화
