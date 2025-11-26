@@ -12,34 +12,25 @@
 ---
 
 ### 0. 메타
-- **Date**: 2025-11-26
-- **Author**: @hwicoding
-- **Branch / Ref**: main
-- **Related Issue / Ticket**: N/A
+- **Date**: YYYY-MM-DD
+- **Author**: @github-id
+- **Branch / Ref**: e.g. `feature/auth`
+- **Related Issue / Ticket**: ref link or `N/A`
 
 ### 1. 작업 요약
-- Alembic 초기화 및 `alembic/env.py` 커스터마이징(환경변수 기반 URL, metadata 로딩, Callout 활용)
-- `UserModel` 정의, `UserRepository`가 실제 Session 기반 CRUD 수행하도록 구현
-- 최초 마이그레이션 `create users table` 작성 및 `ALEMBIC_DATABASE_URL=postgresql+psycopg2://... alembic upgrade head`로 검증
-- Notion API 버전 요구사항 갱신(`2025-09-03`), 워크플로우 재실행으로 동기화 확인
-
-> [!TIP] 데이터 계층을 실제 DB 스키마와 연결했으므로 이후 유스케이스/서비스에서 바로 Repository를 주입해 사용할 수 있음.
+- bullet 1
+- bullet 2
 
 ### 2. Troubleshooting & Decisions
 | 항목 | 내용 |
 | --- | --- |
-| 이슈 | Alembic CLI 실행 시 `ModuleNotFoundError: fastapi` |
-| 원인 분석 | 호스트 Python 환경에 프로젝트 requirements 미설치 상태에서 `app/__init__` import 시 FastAPI 요구 |
-| 선택한 해결책 | `pip install -r requirements.txt`로 로컬에도 동일 버전 의존성 설치, Alembic env import 성공 |
-| 영향 범위/추가 조치 | 로컬 CLI에서 마이그레이션 수행 가능, README에 Alembic 사용법과 호스트 URL 지정 예시 추가 |
-| 이슈 | Notion API 400: `missing_version` |
-| 원인 분석 | 헤더에 `2023-08-02`를 사용했으나 Notion이 최신 버전(`2025-09-03`)만 허용 |
-| 선택한 해결책 | `scripts/notion_sync.py`의 `NOTION_VERSION` 상수를 `2025-09-03`으로 교체 |
-| 영향 범위/추가 조치 | 워크플로우 재실행 시 Notion 페이지 정상 생성, 향후 호환성 이슈 발생 시 버전 리스트 확인 필요 |
+| 이슈 | ... |
+| 원인 분석 | ... |
+| 선택한 해결책 | ... |
+| 영향 범위/추가 조치 | ... |
 
 ### 3. 다음 액션
-- [ ] Alembic 자동화(도커 entrypoint 혹은 GH Actions) 설계
-- [ ] 유저 도메인 Usecase + Auth 플로우 설계 및 테스트 작성
-- [ ] JWT 토큰 만료/리프레시 전략 정의 및 라우터 반영
+- [ ] TODO 1
+- [ ] TODO 2
 
 
