@@ -1,4 +1,4 @@
-from . import health
+from . import auth, health
 
-__all__ = ["health"]
+__all__ = ["auth", "health"]
 

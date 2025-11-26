@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(
         default=60, alias="ACCESS_TOKEN_EXPIRE_MINUTES"
     )
+    refresh_token_expire_minutes: int = Field(
+        default=60 * 24 * 14, alias="REFRESH_TOKEN_EXPIRE_MINUTES"
+    )
 
     class Config:
         env_file = ".env"

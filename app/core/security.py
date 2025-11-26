@@ -11,14 +11,27 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 settings = get_settings()
 
 
-def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
-    expires = datetime.now(timezone.utc) + (
-        expires_delta
-        if expires_delta
-        else timedelta(minutes=settings.access_token_expire_minutes)
-    )
-    payload = {"sub": subject, "exp": expires}
+def _create_token(subject: str, minutes: int, token_type: str) -> str:
+    expires = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+    payload = {"sub": subject, "exp": expires, "type": token_type}
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
+    minutes = (
+        int(expires_delta.total_seconds() / 60)
+        if expires_delta
+        else settings.access_token_expire_minutes
+    )
+    return _create_token(subject, minutes, token_type="access")
+
+
+def create_refresh_token(subject: str) -> str:
+    return _create_token(
+        subject,
+        settings.refresh_token_expire_minutes,
+        token_type="refresh",
+    )
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -37,9 +50,14 @@ class InvalidTokenError(Exception):
     """Raised when JWT verification fails."""
 
 
-def validate_token(token: str) -> dict[str, Any]:
+def validate_token(token: str, expected_type: str = "access") -> dict[str, Any]:
     try:
-        return decode_token(token)
+        payload = decode_token(token)
     except JWTError as exc:
         raise InvalidTokenError(str(exc)) from exc
+
+    token_type = payload.get("type")
+    if expected_type and token_type != expected_type:
+        raise InvalidTokenError(f"Invalid token type: {token_type}")
+    return payload
 
