@@ -2,7 +2,6 @@
 import json
 import os
 import sys
-import textwrap
 from datetime import datetime, timezone
 
 import requests
@@ -31,37 +30,89 @@ def read_doc_log(doc_path: str) -> str:
         return fh.read().strip()
 
 
-def to_paragraph_blocks(markdown_text: str) -> list[dict]:
-    paragraphs = []
-    for block in markdown_text.split("\n\n"):
-        normalized = block.strip()
-        if not normalized:
+def _rich_text(content: str) -> list[dict]:
+    return [
+        {
+            "type": "text",
+            "text": {"content": content},
+        }
+    ]
+
+
+def _paragraph_block(content: str) -> dict:
+    return {
+        "object": "block",
+        "type": "paragraph",
+        "paragraph": {"rich_text": _rich_text(content)},
+    }
+
+
+def _heading_block(level: int, content: str) -> dict:
+    level = max(1, min(level, 3))
+    key = f"heading_{level}"
+    return {
+        "object": "block",
+        "type": key,
+        key: {"rich_text": _rich_text(content)},
+    }
+
+
+def _list_block(block_type: str, content: str) -> dict:
+    return {
+        "object": "block",
+        "type": block_type,
+        block_type: {"rich_text": _rich_text(content)},
+    }
+
+
+def to_notion_blocks(markdown_text: str) -> list[dict]:
+    blocks: list[dict] = []
+    paragraph_buffer: list[str] = []
+
+    def flush_paragraph() -> None:
+        if not paragraph_buffer:
+            return
+        text = " ".join(paragraph_buffer).strip()
+        if text:
+            blocks.append(_paragraph_block(text))
+        paragraph_buffer.clear()
+
+    lines = markdown_text.splitlines()
+    for raw_line in lines:
+        stripped = raw_line.strip()
+        if not stripped:
+            flush_paragraph()
             continue
-        paragraphs.append(normalized)
 
-    if not paragraphs:
-        paragraphs = [markdown_text.strip()]
+        if stripped.startswith("#"):
+            flush_paragraph()
+            level = len(stripped) - len(stripped.lstrip("#"))
+            content = stripped[level:].strip()
+            if content:
+                blocks.append(_heading_block(level, content))
+            continue
 
-    notion_blocks = []
-    for para in paragraphs:
-        for piece in textwrap.wrap(
-            para, width=1800, replace_whitespace=False, drop_whitespace=False
-        ):
-            notion_blocks.append(
-                {
-                    "object": "block",
-                    "type": "paragraph",
-                    "paragraph": {
-                        "rich_text": [
-                            {
-                                "type": "text",
-                                "text": {"content": piece},
-                            }
-                        ]
-                    },
-                }
-            )
-    return notion_blocks
+        if stripped.startswith(("- ", "* ")):
+            flush_paragraph()
+            blocks.append(_list_block("bulleted_list_item", stripped[2:].strip()))
+            continue
+
+        if stripped[0].isdigit():
+            try:
+                number_part, rest = stripped.split(". ", 1)
+            except ValueError:
+                number_part, rest = "", ""
+            if number_part.isdigit() and rest:
+                flush_paragraph()
+                blocks.append(
+                    _list_block("numbered_list_item", rest.strip())
+                )
+                continue
+
+        paragraph_buffer.append(stripped)
+
+    flush_paragraph()
+    return blocks
 
 
 def create_notion_page(
@@ -85,7 +136,7 @@ def create_notion_page(
                 ]
             }
         },
-        "children": to_paragraph_blocks(markdown_text),
+        "children": to_notion_blocks(markdown_text),
     }
     response = requests.post(
         "https://api.notion.com/v1/pages", headers=headers, data=json.dumps(payload)
