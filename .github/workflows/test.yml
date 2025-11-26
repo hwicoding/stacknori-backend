@@ -37,6 +37,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Verify Alembic migrations
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+        run: |
+          # Set ALEMBIC_DATABASE_URL for sync driver
+          export ALEMBIC_DATABASE_URL="sqlite:///:memory:"
+          # Check if migrations can be generated without errors
+          alembic check
+          # Verify migration history is valid
+          alembic history
+
       - name: Run tests with coverage
         run: |
           pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing
