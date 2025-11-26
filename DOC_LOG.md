@@ -35,5 +35,6 @@
 ### 3. 다음 액션
 - [ ] Alembic 자동화(도커 entrypoint 혹은 GH Actions) 설계
 - [ ] 유저 도메인 Usecase + Auth 플로우 설계 및 테스트 작성
+- [ ] JWT 토큰 만료/리프레시 전략 정의 및 라우터 반영
 
 
