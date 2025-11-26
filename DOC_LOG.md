@@ -37,4 +37,6 @@
 3. Dockerfile 개선, Clean Architecture 디렉토리/DB 세션/JWT 구현.
 4. 프런트/Widgetbook 레포를 로컬 PC에 클론하여 동일 Notion Integration으로 로그 공유.
 
+추가
+
 
