@@ -1,5 +1,8 @@
 name: Sync DOC_LOG to Notion
 
+permissions:
+  contents: write
+
 on:
   push:
     paths:

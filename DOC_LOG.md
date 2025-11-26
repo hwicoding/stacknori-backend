@@ -37,6 +37,10 @@
 3. Dockerfile 개선, Clean Architecture 디렉토리/DB 세션/JWT 구현.
 4. 프런트/Widgetbook 레포를 로컬 PC에 클론하여 동일 Notion Integration으로 로그 공유.
 
-추가
-
-
+### 7. GitHub Actions/Notion 연동 트러블슈팅
+| 이슈 | 원인 | 해결 |
+| --- | --- | --- |
+| 워크플로우 push 거부 | Sourcetree OAuth 토큰에 `workflow` 스코프 부재 | `workflow` 권한 포함 토큰으로 인증 후 재송신 |
+| Notion 404 (DB 미탐색) | 페이지 링크 사용, Integration 미공유 | DB 뷰 ID 확인 및 `Stacknori Dev-Journal` Integration 초대 |
+| Notion 400 (`Name` 미존재) | Notion 테이블 핵심 컬럼명이 `이름`으로 설정됨 | 제목 컬럼을 `Name`으로 변경하여 API 속성과 일치 |
+| 자동 초기화 커밋 실패(403) | 기본 `GITHUB_TOKEN`이 `read` 권한만 보유 | 워크플로우에 `permissions: contents: write` 추가하여 push 허용 |
