@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 import requests
 
 
-NOTION_VERSION = "2023-08-02"
+NOTION_VERSION = "2025-09-03"
 
 
 def log(message: str) -> None:
