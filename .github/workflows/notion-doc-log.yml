@@ -36,7 +36,11 @@ jobs:
       - name: Reset DOC_LOG.md
         if: success() && steps.sync.outputs.sync_performed == 'true'
         run: |
-          printf "## Stacknori DOC Log\n\n" > DOC_LOG.md
+          if [ -f DOC_LOG.template.md ]; then
+            cp DOC_LOG.template.md DOC_LOG.md
+          else
+            printf "## Stacknori DOC Log\n\n" > DOC_LOG.md
+          fi
 
       - name: Commit cleared DOC_LOG.md
         if: success() && steps.sync.outputs.sync_performed == 'true'
