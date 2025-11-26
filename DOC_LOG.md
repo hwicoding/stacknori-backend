@@ -12,25 +12,26 @@
 ---
 
 ### 0. 메타
-- **Date**: YYYY-MM-DD
-- **Author**: @github-id
-- **Branch / Ref**: e.g. `feature/auth`
-- **Related Issue / Ticket**: ref link or `N/A`
+- **Date**: 2025-11-26
+- **Author**: @hwicoding
+- **Branch / Ref**: main
+- **Related Issue / Ticket**: N/A
 
 ### 1. 작업 요약
-- bullet 1
-- bullet 2
+- `.env` 기준으로 `docker compose up --build` 실행, FastAPI/DB 컨테이너 정상 기동 확인
+- `/health`, `/docs` 모두 200 응답이며 환경 값 `development` 노출로 dev 모드 검증 완료
 
 ### 2. Troubleshooting & Decisions
 | 항목 | 내용 |
 | --- | --- |
-| 이슈 | ... |
-| 원인 분석 | ... |
-| 선택한 해결책 | ... |
-| 영향 범위/추가 조치 | ... |
+| 이슈 | Docker daemon not running → `Cannot connect to the Docker daemon` |
+| 원인 분석 | 로컬 Mac에서 Docker Desktop이 꺼져 있었음 |
+| 선택한 해결책 | Docker Desktop 실행 후 동일 명령 재시도 |
+| 영향 범위/추가 조치 | 빌드/기동 성공, DOC_LOG에 런북화. 향후 실행 전 데몬 상태 확인 습관화 |
 
 ### 3. 다음 액션
-- [ ] TODO 1
-- [ ] TODO 2
+- [ ] Alembic 초기화 및 기본 마이그레이션
+- [ ] 실제 도메인/리포지토리 구현 및 auth 플로우 설계
+
 
 
