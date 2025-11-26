@@ -27,6 +27,16 @@ docker compose up --build
 2. `git add DOC_LOG.md && git commit`
 3. `git push` → GitHub Actions가 Notion Dev-Journal에 로그를 저장하고 DOC_LOG를 초기화
 
+## 데이터베이스 마이그레이션
+```bash
+# 새 마이그레이션 생성
+PYTHONPATH=. alembic revision -m "add something"
+
+# 로컬에서 실행할 경우 호스트 DB URL을 지정
+ALEMBIC_DATABASE_URL=postgresql+psycopg2://stacknori:stacknori@localhost:5432/stacknori alembic upgrade head
+```
+도커 컨테이너 내부에서는 `POSTGRES_SERVER=db` 환경 변수를 그대로 사용하면 된다.
+
 ## 테스트/배포 (로드맵)
 - GitHub Actions CI (lint/test) & docker build 캐시
 - NAS 기반 self-hosted runner에서 compose 배포 자동화
