@@ -1,0 +1,217 @@
+name: Update Notion Dev Journal
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update-journal:
+    runs-on: self-hosted
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install requests library
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install requests
+      
+      - name: Check if DOC_LOG.md exists
+        id: check_log
+        run: |
+          if [ -f "DOC_LOG.md" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Read DOC_LOG.md
+        id: read_log
+        if: steps.check_log.outputs.exists == 'true'
+        run: |
+          if [ -s "DOC_LOG.md" ]; then
+            echo "content<<EOF" >> $GITHUB_OUTPUT
+            cat DOC_LOG.md >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "has_content=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_content=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create Notion page
+        if: steps.check_log.outputs.exists == 'true' && steps.read_log.outputs.has_content == 'true'
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+        run: |
+          python3 << 'EOF'
+          import os
+          import json
+          import requests
+          from datetime import datetime
+          
+          NOTION_API_KEY = os.environ.get('NOTION_API_KEY')
+          NOTION_DATABASE_ID = os.environ.get('NOTION_DATABASE_ID')
+          DOC_CONTENT = """${{ steps.read_log.outputs.content }}"""
+          
+          # Get commit info
+          commit_sha = os.environ.get('GITHUB_SHA', '')[:7]
+          commit_message = os.environ.get('GITHUB_EVENT_HEAD_COMMIT_MESSAGE', 'No commit message')
+          repo_name = os.environ.get('GITHUB_REPOSITORY', 'stacknori-backend')
+          
+          # Create Notion page
+          url = "https://api.notion.com/v1/pages"
+          headers = {
+              "Authorization": f"Bearer {NOTION_API_KEY}",
+              "Content-Type": "application/json",
+              "Notion-Version": "2022-06-28"
+          }
+          
+          # Get current date
+          current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+          
+          # Create page properties
+          properties = {
+              "Name": {
+                  "title": [
+                      {
+                          "text": {
+                              "content": f"[{repo_name}] {current_date}"
+                          }
+                      }
+                  ]
+              },
+              "Date": {
+                  "date": {
+                      "start": datetime.now().isoformat()
+                  }
+              },
+              "Repository": {
+                  "rich_text": [
+                      {
+                          "text": {
+                              "content": repo_name
+                          }
+                      }
+                  ]
+              },
+              "Commit": {
+                  "rich_text": [
+                      {
+                          "text": {
+                              "content": commit_sha
+                          }
+                      }
+                  ]
+              }
+          }
+          
+          # Create page content
+          children = [
+              {
+                  "object": "block",
+                  "type": "heading_2",
+                  "heading_2": {
+                      "rich_text": [
+                          {
+                              "text": {
+                                  "content": "커밋 정보"
+                              }
+                          }
+                      ]
+                  }
+              },
+              {
+                  "object": "block",
+                  "type": "paragraph",
+                  "paragraph": {
+                      "rich_text": [
+                          {
+                              "text": {
+                                  "content": f"커밋 메시지: {commit_message}"
+                              }
+                          }
+                      ]
+                  }
+              },
+              {
+                  "object": "block",
+                  "type": "paragraph",
+                  "paragraph": {
+                      "rich_text": [
+                          {
+                              "text": {
+                                  "content": f"커밋 SHA: {commit_sha}"
+                              }
+                          }
+                      ]
+                  }
+              },
+              {
+                  "object": "block",
+                  "type": "heading_2",
+                  "heading_2": {
+                      "rich_text": [
+                          {
+                              "text": {
+                                  "content": "작업 내용"
+                              }
+                          }
+                      ]
+                  }
+              }
+          ]
+          
+          # Add DOC_LOG.md content as code block
+          if DOC_CONTENT.strip():
+              children.append({
+                  "object": "block",
+                  "type": "code",
+                  "code": {
+                      "language": "markdown",
+                      "rich_text": [
+                          {
+                              "text": {
+                                  "content": DOC_CONTENT
+                              }
+                          }
+                      ]
+                  }
+              })
+          
+          data = {
+              "parent": {
+                  "database_id": NOTION_DATABASE_ID
+              },
+              "properties": properties,
+              "children": children
+          }
+          
+          response = requests.post(url, headers=headers, json=data)
+          
+          if response.status_code == 200:
+              print("✅ Notion page created successfully")
+              page_id = response.json().get("id", "")
+              print(f"Page ID: {page_id}")
+          else:
+              print(f"❌ Failed to create Notion page: {response.status_code}")
+              print(response.text)
+              exit(1)
+          EOF
+      
+      - name: Clear DOC_LOG.md
+        if: steps.check_log.outputs.exists == 'true' && steps.read_log.outputs.has_content == 'true'
+        run: |
+          echo "# 개발 일지" > DOC_LOG.md
+          echo "" >> DOC_LOG.md
+          echo "이 파일에 작업 내용을 기록하면 자동으로 Notion에 전송됩니다." >> DOC_LOG.md
+

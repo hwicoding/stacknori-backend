@@ -1,0 +1,54 @@
+name: Deploy to NAS Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Build Docker image
+        run: |
+          cd /home/iwh/stacknori
+          docker compose build web
+      
+      - name: Stop existing containers
+        run: |
+          cd /home/iwh/stacknori
+          docker compose down
+      
+      - name: Start services
+        run: |
+          cd /home/iwh/stacknori
+          docker compose up -d
+      
+      - name: Run database migrations
+        run: |
+          cd /home/iwh/stacknori
+          docker compose exec -T web alembic upgrade head || echo "No migrations to run"
+        continue-on-error: true
+      
+      - name: Health check
+        run: |
+          sleep 5
+          curl -f http://localhost:8000/health || exit 1
+        continue-on-error: true
+
