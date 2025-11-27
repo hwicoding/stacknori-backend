@@ -12,31 +12,25 @@
 ---
 
 ### 0. 메타
-- **Date**: 2025-11-27
-- **Author**: @hwicoding
-- **Branch / Ref**: main
-- **Related Issue / Ticket**: 테스트 커버리지 향상
+- **Date**: YYYY-MM-DD
+- **Author**: @github-id
+- **Branch / Ref**: e.g. `feature/auth`
+- **Related Issue / Ticket**: ref link or `N/A`
 
 ### 1. 작업 요약
-- Roadmap/Material API 라우터 테스트 추가: `tests/test_roadmap_routes.py`, `tests/test_material_routes.py` 작성
-- 라우터에서 엔티티→스키마 변환 로직 추가: `Roadmap` → `RoadmapNode`, `Material` → `MaterialItem` 변환 함수 구현
-- SQLite JSON 컬럼 검색 이슈 해결: `keywords` 검색을 Python 레벨 필터링으로 변경하여 SQLite 호환성 확보
-- 테스트 커버리지 81% → 86% 향상: 전체 테스트 스위트 32개 모두 통과
+- bullet 1
+- bullet 2
 
 ### 2. Troubleshooting & Decisions
 | 항목 | 내용 |
 | --- | --- |
-| 이슈 | 라우터에서 `Roadmap`/`Material` 엔티티를 직접 반환 시 Pydantic ValidationError 발생 |
-| 원인 분석 | `RoadmapListResponse`와 `MaterialListResponse`가 `RoadmapNode`/`MaterialItem` 스키마를 기대하지만 엔티티가 전달됨 |
-| 선택한 해결책 | 라우터에 `_roadmap_to_node`, `_material_to_item` 변환 함수 추가하여 엔티티→스키마 변환 |
-| 영향 범위/추가 조치 | Enum value 변환 로직 포함, 재귀적 children 변환 처리 |
-| 이슈 | SQLite에서 `cast(MaterialModel.keywords, str).ilike()` 실행 시 `TypeError` 발생 |
-| 원인 분석 | SQLite의 JSON 타입이 SQLAlchemy의 `cast`와 호환되지 않음 |
-| 선택한 해결책 | `keywords` 검색을 Python 레벨 필터링으로 변경: DB에서는 title/summary만 검색, keywords는 메모리에서 필터링 |
-| 영향 범위/추가 조치 | 대량 데이터에서는 성능 이슈 가능, 추후 PostgreSQL 전용 JSONB 검색으로 최적화 검토 |
+| 이슈 | ... |
+| 원인 분석 | ... |
+| 선택한 해결책 | ... |
+| 영향 범위/추가 조치 | ... |
 
 ### 3. 다음 액션
-- [ ] Usecase/Repository 레벨 단위 테스트 추가 (현재 54-79% 커버리지)
-- [ ] API 문서화 확장: OpenAPI 스키마에 예제 응답 추가 또는 별도 API 문서 페이지 생성 검토
+- [ ] TODO 1
+- [ ] TODO 2
 
 
