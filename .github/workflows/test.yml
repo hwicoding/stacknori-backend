@@ -49,8 +49,10 @@ jobs:
           alembic history
 
       - name: Run tests with coverage
+        id: test
         run: |
-          pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing
+          pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing --cov-report=json
+        continue-on-error: false
 
       - name: Validate documentation
         run: |
@@ -70,5 +72,9 @@ jobs:
         run: |
           echo "## Test Results" >> $GITHUB_STEP_SUMMARY
           echo "- Python version: ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage.json ]; then
+            COVERAGE=$(python -c "import json; print(json.load(open('coverage.json'))['totals']['percent_covered'])")
+            echo "- Coverage: ${COVERAGE}%" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- Tests completed" >> $GITHUB_STEP_SUMMARY
 

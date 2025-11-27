@@ -21,7 +21,8 @@
 - `user_progress` 테이블에 `item_type`/`material_id`/체크 제약을 추가하는 Alembic 마이그레이션 작성, ORM 모델도 Enum 기반으로 확장
 - Progress Repository/Usecase/Router/Schema를 전부 업데이트해 `type=roadmap|material` 쿼리 파라미터, 통계(roadmap/material 별 집계)와 응답 필드를 통일
 - 자료 완료 토글/조회 흐름을 검증하는 `tests/test_progress_routes.py`를 추가하고 기존 pytest 스위트 모두 통과
-- README/API 문서에 progress API 확장 스펙 반영, DOC_LOG에 작업 내역 기록 후 Notion 동기화 예정
+- README에 API 사용 예제(curl) 추가: 인증/로드맵/진도/자료 엔드포인트별 요청/응답 예시 포함
+- CI 테스트 요약 개선: 커버리지 퍼센트를 GitHub Actions Summary에 자동 표시하도록 `test.yml` 수정
 
 ### 2. Troubleshooting & Decisions
 | 항목 | 내용 |
@@ -38,7 +39,7 @@
 | 영향 범위/추가 조치 | 기존 로드맵 클라이언트는 변화 없이 기본 `roadmap`으로 동작, 신규 자료 progress는 `?type=material` 호출만 추가하면 됨 |
 
 ### 3. 다음 액션
-- [ ] CI 워크플로우에 새 progress 테스트 커버리지 리포트를 반영 (필요 시 단계 분리)
 - [ ] 자료 progress 데이터를 활용한 통계/알림 요구사항 정리 (프론트 피드백 대기)
+- [ ] API 문서화 확장: OpenAPI 스키마에 예제 응답 추가 또는 별도 API 문서 페이지 생성 검토
 
 
