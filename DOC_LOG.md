@@ -12,33 +12,25 @@
 ---
 
 ### 0. 메타
-- **Date**: 2025-11-27
-- **Author**: @hwicoding
-- **Branch / Ref**: main
-- **Related Issue / Ticket**: DeprecationWarning 해결 및 API 문서화 개선
+- **Date**: YYYY-MM-DD
+- **Author**: @github-id
+- **Branch / Ref**: e.g. `feature/auth`
+- **Related Issue / Ticket**: ref link or `N/A`
 
 ### 1. 작업 요약
-- DeprecationWarning 해결: `datetime.utcnow()` → `datetime.now(timezone.utc)` 변경 (`app/infrastructure/repositories/progress_repository.py`)
-- Pydantic Config 마이그레이션: `class Config:` → `model_config = ConfigDict(...)` 변경 (6개 엔티티 파일 + `app/core/config.py`)
-- API 문서화 개선: OpenAPI 스키마에 상세 설명 및 예제 응답 추가 (`app/main.py`의 `custom_openapi` 함수)
-- 경고 수 감소: 48개 → 40개 (Pydantic DeprecationWarning 대부분 해결)
+- bullet 1
+- bullet 2
 
 ### 2. Troubleshooting & Decisions
 | 항목 | 내용 |
 | --- | --- |
-| 이슈 | Python 3.12에서 `datetime.utcnow()` DeprecationWarning 발생 |
-| 원인 분석 | Python 3.12부터 `datetime.utcnow()`가 deprecated, timezone-aware datetime 사용 권장 |
-| 선택한 해결책 | `datetime.now(timezone.utc)`로 변경하여 timezone-aware datetime 사용 |
-| 영향 범위/추가 조치 | `completed_at` 필드에 timezone 정보 포함, DB와의 호환성 유지 |
-| 이슈 | Pydantic v2에서 `class Config:` 사용 시 DeprecationWarning 발생 |
-| 원인 분석 | Pydantic v2는 `ConfigDict`를 사용하도록 권장, `BaseSettings`는 `SettingsConfigDict` 사용 |
-| 선택한 해결책 | 모든 엔티티와 Settings 클래스에 `model_config = ConfigDict(...)` 또는 `SettingsConfigDict(...)` 적용 |
-| 영향 범위/추가 조치 | Pydantic v3 대비 호환성 확보, 경고 메시지 감소로 로그 가독성 향상 |
-| 이슈 | OpenAPI 문서에 예제 응답이 없어 API 사용자 이해도 저하 |
-| 원인 분석 | FastAPI 기본 OpenAPI 스키마에는 예제가 포함되지 않음 |
-| 선택한 해결책 | `custom_openapi` 함수로 OpenAPI 스키마 커스터마이징, 주요 응답 스키마에 예제 추가 |
-| 영향 범위/추가 조치 | `/docs`에서 예제 확인 가능, API 사용자 온보딩 시간 단축 |
+| 이슈 | ... |
+| 원인 분석 | ... |
+| 선택한 해결책 | ... |
+| 영향 범위/추가 조치 | ... |
 
 ### 3. 다음 액션
-- [ ] Usecase/Repository 레벨 단위 테스트 추가 (현재 54-79% 커버리지)
-- [ ] 남은 DeprecationWarning 해결 (httpx, jose 등 외부 라이브러리 경고)
+- [ ] TODO 1
+- [ ] TODO 2
+
+
