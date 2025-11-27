@@ -142,7 +142,7 @@ def _extract_structured_sections(markdown_text: str) -> dict[str, list[str]]:
             sections[current_key].append(line)
 
     if any(filter(None, sections.values())):
-    return sections
+        return sections
     return {}
 
 
