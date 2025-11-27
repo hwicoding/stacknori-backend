@@ -15,22 +15,30 @@
 - **Date**: 2025-11-27
 - **Author**: @hwicoding
 - **Branch / Ref**: main
-- **Related Issue / Ticket**: DOC_LOG → Notion 스타일 개선
+- **Related Issue / Ticket**: Progress API 자료 확장
 
 ### 1. 작업 요약
-- Notion Dev-Journal의 `Date/Repository/Commit` 컬럼을 자동 채우도록 `scripts/notion_sync.py`를 확장, DOC_LOG 메타 정보와 GitHub env를 파싱해 날짜·저장소 링크·커밋 링크를 모두 세팅
-- Notion에 링크 텍스트/아이콘이 적용되도록 Repository/Commit을 Rich text(깃허브 URL)로 구성, 날짜는 ISO 포맷으로 변환해 정렬이 가능한 date 속성으로 저장
+- `user_progress` 테이블에 `item_type`/`material_id`/체크 제약을 추가하는 Alembic 마이그레이션 작성, ORM 모델도 Enum 기반으로 확장
+- Progress Repository/Usecase/Router/Schema를 전부 업데이트해 `type=roadmap|material` 쿼리 파라미터, 통계(roadmap/material 별 집계)와 응답 필드를 통일
+- 자료 완료 토글/조회 흐름을 검증하는 `tests/test_progress_routes.py`를 추가하고 기존 pytest 스위트 모두 통과
+- README/API 문서에 progress API 확장 스펙 반영, DOC_LOG에 작업 내역 기록 후 Notion 동기화 예정
 
 ### 2. Troubleshooting & Decisions
 | 항목 | 내용 |
 | --- | --- |
-| 이슈 | Notion DB에 Date/Repository/Commit 컬럼을 만들었지만 자동화가 값을 채우지 않아 수동 입력이 필요했음 |
-| 원인 분석 | 기존 스크립트가 `Name`/본문 block만 생성하고 데이터베이스 속성은 사용하지 않음 |
-| 선택한 해결책 | DOC_LOG `0. 메타` 섹션에서 key/value를 파싱하고, 깃허브 환경 변수(`GITHUB_REPOSITORY`, `GITHUB_SHA`)를 조합해 해당 컬럼 값을 구성 |
-| 영향 범위/추가 조치 | 앞으로 생성되는 모든 페이지가 표 형태 메타 + DB 컬럼 값을 동시에 갖게 되어 정렬/필터가 가능, 추가 컬럼 필요 시 동일 방식으로 확장 예정 |
+| 이슈 | SQLite 테스트에서 `ck_user_progress_item_type` 제약 위반 발생 |
+| 원인 분석 | SQLAlchemy Enum이 Enum 이름(`ROADMAP`)을 저장해 lower case 체크와 충돌 |
+| 선택한 해결책 | `values_callable` 옵션으로 DB에 Enum value(`roadmap`)를 저장하도록 수정 |
+| 영향 범위/추가 조치 | Postgres/SQLite 모두 동일한 문자열을 사용, 추후 Enum 확장 시 동일 패턴 적용 |
+| 이슈 | Progress API 응답이 새 스키마(`item_type`, 세부 통계)를 만족하지 않아 ValidationError 발생 |
+| 선택한 해결책 | Usecase에서 `UserProgress` → dict 변환 후 반환, Schemas에 `ProgressItemType` Enum 추가 |
+| 영향 범위/추가 조치 | 프론트가 Roadmap/Material 구분을 한 번의 API에서 처리할 수 있어 UX 개선 |
+| 이슈 | `type=material` 쿼리 파라미터 미지원으로 테스트 실패 |
+| 선택한 해결책 | FastAPI Query alias를 `type`으로 지정해 기존 API 명세와 호환 |
+| 영향 범위/추가 조치 | 기존 로드맵 클라이언트는 변화 없이 기본 `roadmap`으로 동작, 신규 자료 progress는 `?type=material` 호출만 추가하면 됨 |
 
 ### 3. 다음 액션
-- [ ] 자료 progress 통합 마이그레이션 및 API 구현
-- [ ] CI에 새 API 통합 테스트 추가 및 문서화 자동화(Notion)에 API 변경 내역 연동
+- [ ] CI 워크플로우에 새 progress 테스트 커버리지 리포트를 반영 (필요 시 단계 분리)
+- [ ] 자료 progress 데이터를 활용한 통계/알림 요구사항 정리 (프론트 피드백 대기)
 
 

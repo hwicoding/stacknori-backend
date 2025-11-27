@@ -29,8 +29,8 @@ docker compose up --build
 
 ## API 개요
 - `GET /api/v1/roadmaps`: 분야별 로드맵 계층 구조 + 사용자별 완료 상태
-- `POST /api/v1/progress/{item_id}/complete`: 로드맵 완료 상태 토글
-- `GET /api/v1/progress`: 사용자 진도 현황 및 통계
+- `POST /api/v1/progress/{item_id}/complete?type=roadmap|material`: 로드맵/자료 완료 토글
+- `GET /api/v1/progress?type=roadmap|material`: 사용자 진도 현황 및 통계(자료까지 통합, 유형별 필터 지원)
 - `GET /api/v1/materials`: 자료 검색(키워드/난이도/유형 필터, 페이지네이션)
 - `POST/DELETE /api/v1/materials/{material_id}/scrap`: 자료 스크랩/해제
 - `POST /api/v1/auth/*`: 인증 API (회원가입/로그인/토큰 재발급/프로필)

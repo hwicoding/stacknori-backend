@@ -82,9 +82,10 @@ async def get_roadmap_usecase(
 
 async def get_update_progress_usecase(
     roadmap_repo: RoadmapRepository = Depends(get_roadmap_repository),
+    material_repo: MaterialRepository = Depends(get_material_repository),
     progress_repo: UserProgressRepository = Depends(get_progress_repository),
 ) -> UpdateProgressUseCase:
-    return UpdateProgressUseCase(roadmap_repo, progress_repo)
+    return UpdateProgressUseCase(roadmap_repo, material_repo, progress_repo)
 
 
 async def get_progress_overview_usecase(

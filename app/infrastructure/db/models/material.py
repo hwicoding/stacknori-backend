@@ -61,5 +61,10 @@ class MaterialModel(Base):
         back_populates="material",
         cascade="all, delete-orphan",
     )
+    progress_entries: Mapped[list["UserProgressModel"]] = relationship(
+        "UserProgressModel",
+        back_populates="material",
+        cascade="all, delete-orphan",
+    )
 
 
