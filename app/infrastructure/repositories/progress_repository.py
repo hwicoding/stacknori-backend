@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import and_, func, select
@@ -60,7 +60,7 @@ class UserProgressRepository:
 
         if progress:
             progress.is_completed = completed
-            progress.completed_at = datetime.utcnow() if completed else None
+            progress.completed_at = datetime.now(timezone.utc) if completed else None
         else:
             progress = UserProgressModel(
                 user_id=user_id,
@@ -68,7 +68,7 @@ class UserProgressRepository:
                 material_id=item_id if item_type == ItemType.MATERIAL else None,
                 item_type=item_type.value,
                 is_completed=completed,
-                completed_at=datetime.utcnow() if completed else None,
+                completed_at=datetime.now(timezone.utc) if completed else None,
             )
             self.session.add(progress)
 

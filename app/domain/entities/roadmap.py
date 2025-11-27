@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class RoadmapCategory(str, Enum):
@@ -14,6 +14,8 @@ class RoadmapCategory(str, Enum):
 
 
 class Roadmap(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     category: RoadmapCategory
     name: str
@@ -24,7 +26,4 @@ class Roadmap(BaseModel):
     children: List["Roadmap"] = Field(default_factory=list)
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 

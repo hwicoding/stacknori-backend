@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ItemType(str, Enum):
@@ -13,6 +13,8 @@ class ItemType(str, Enum):
 
 
 class UserProgress(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     item_id: int
@@ -21,7 +23,4 @@ class UserProgress(BaseModel):
     category: Optional[str] = None
     is_completed: bool
     completed_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 

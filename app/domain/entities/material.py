@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class MaterialDifficulty(str, Enum):
@@ -18,6 +18,8 @@ class MaterialType(str, Enum):
 
 
 class Material(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     title: str
     url: str
@@ -29,7 +31,4 @@ class Material(BaseModel):
     is_scrapped: bool = False
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 

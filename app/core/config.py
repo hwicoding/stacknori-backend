@@ -1,10 +1,16 @@
 from functools import lru_cache
 
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
     app_name: str = Field(default="Stacknori API", alias="APP_NAME")
     app_env: str = Field(default="development", alias="APP_ENV")
     app_debug: bool = Field(default=True, alias="APP_DEBUG")
@@ -24,11 +30,6 @@ class Settings(BaseSettings):
     refresh_token_expire_minutes: int = Field(
         default=60 * 24 * 14, alias="REFRESH_TOKEN_EXPIRE_MINUTES"
     )
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
 
 
 @lru_cache
