@@ -1,7 +1,16 @@
+import os
+
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
+
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("ACCESS_TOKEN_EXPIRE_MINUTES", "60")
+os.environ.setdefault("REFRESH_TOKEN_EXPIRE_MINUTES", f"{60 * 24 * 14}")
+os.environ.setdefault("ALGORITHM", "HS256")
 
 from app.core.config import Settings
 from app.core.database import Base
@@ -25,10 +34,11 @@ def test_settings() -> Settings:
         algorithm="HS256",
         access_token_expire_minutes=60,
         refresh_token_expire_minutes=60 * 24 * 14,
+        _env_file=None,
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_db_session(test_settings: Settings):
     """테스트용 DB 세션 (트랜잭션 롤백)"""
     engine = create_async_engine(
@@ -50,7 +60,7 @@ async def test_db_session(test_settings: Settings):
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_client(test_db_session: AsyncSession):
     """FastAPI 테스트 클라이언트"""
     from app.core.database import get_db
@@ -69,7 +79,7 @@ async def test_client(test_db_session: AsyncSession):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_user(test_db_session: AsyncSession):
     """테스트용 샘플 사용자 생성"""
     from app.core.security import get_password_hash

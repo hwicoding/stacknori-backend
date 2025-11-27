@@ -33,5 +33,8 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    try:
+        return Settings()
+    except PermissionError:
+        return Settings(_env_file=None)
 

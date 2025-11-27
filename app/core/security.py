@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from uuid import uuid4
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -12,8 +13,15 @@ settings = get_settings()
 
 
 def _create_token(subject: str, minutes: int, token_type: str) -> str:
-    expires = datetime.now(timezone.utc) + timedelta(minutes=minutes)
-    payload = {"sub": subject, "exp": expires, "type": token_type}
+    now = datetime.now(timezone.utc)
+    expires = now + timedelta(minutes=minutes)
+    payload = {
+        "sub": subject,
+        "exp": expires,
+        "iat": now,
+        "jti": uuid4().hex,
+        "type": token_type,
+    }
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
