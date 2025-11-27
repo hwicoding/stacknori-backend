@@ -66,6 +66,197 @@ def _list_block(block_type: str, content: str) -> dict:
     }
 
 
+def _callout_block(content: str, icon: str = "💡", color: str = "default") -> dict:
+    return {
+        "object": "block",
+        "type": "callout",
+        "callout": {
+            "rich_text": _rich_text(content),
+            "icon": {"emoji": icon},
+            "color": color,
+        },
+    }
+
+
+def _divider_block() -> dict:
+    return {"object": "block", "type": "divider", "divider": {}}
+
+
+def _todo_block(content: str, checked: bool) -> dict:
+    return {
+        "object": "block",
+        "type": "to_do",
+        "to_do": {"checked": checked, "rich_text": _rich_text(content)},
+    }
+
+
+def _table_block(rows: list[list[str]], has_header: bool) -> dict:
+    table_width = max((len(row) for row in rows), default=0)
+
+    def _cells(row: list[str]) -> list[list[dict]]:
+        padded = row + [""] * (table_width - len(row))
+        return [[{"type": "text", "text": {"content": cell}}] for cell in padded]
+
+    children = [
+        {
+            "object": "block",
+            "type": "table_row",
+            "table_row": {"cells": _cells(row)},
+        }
+        for row in rows
+    ]
+
+    return {
+        "object": "block",
+        "type": "table",
+        "table": {
+            "table_width": table_width,
+            "has_column_header": has_header,
+            "has_row_header": False,
+            "children": children,
+        },
+    }
+
+
+SECTION_MAP = {
+    "0. 메타": "meta",
+    "1. 작업 요약": "summary",
+    "2. Troubleshooting & Decisions": "troubleshooting",
+    "2. Troubleshooting": "troubleshooting",
+    "3. 다음 액션": "next_actions",
+}
+
+
+def _extract_structured_sections(markdown_text: str) -> dict[str, list[str]]:
+    sections = {value: [] for value in SECTION_MAP.values()}
+    current_key: str | None = None
+    heading_pattern = re.compile(r"^###\s+(.*)$")
+
+    for line in markdown_text.splitlines():
+        heading_match = heading_pattern.match(line.strip())
+        if heading_match:
+            mapped = SECTION_MAP.get(heading_match.group(1).strip())
+            current_key = mapped
+            continue
+        if current_key:
+            sections[current_key].append(line)
+
+    if any(filter(None, sections.values())):
+        return sections
+    return {}
+
+
+def _build_meta_blocks(lines: list[str]) -> list[dict]:
+    rows = [["항목", "내용"]]
+    pattern = re.compile(r"^-\s*\*\*(.+?)\*\*:\s*(.+)$")
+    for line in lines:
+        match = pattern.match(line.strip())
+        if match:
+            rows.append([match.group(1), match.group(2)])
+    if len(rows) == 1:
+        return []
+    return [_table_block(rows, has_header=True)]
+
+
+def _build_summary_blocks(lines: list[str]) -> list[dict]:
+    highlights = []
+    icons = ["🚀", "🛠️", "📌", "✅", "✨"]
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        stripped = re.sub(r"^[-*]\s*", "", stripped)
+        if stripped:
+            highlights.append(stripped)
+    result: list[dict] = []
+    for idx, text in enumerate(highlights):
+        icon = icons[idx % len(icons)]
+        result.append(_callout_block(text, icon, "gray_background"))
+    return result
+
+
+def _parse_markdown_table(lines: list[str]) -> tuple[list[list[str]], bool]:
+    raw_rows = [line for line in lines if line.strip()]
+    if not raw_rows:
+        return []
+
+    def is_separator(line: str) -> bool:
+        segments = line.strip().strip("|").split("|")
+        return all(set(seg.strip()) <= set(":-") and seg.strip() for seg in segments)
+
+    parsed_rows = [
+        [cell.strip() for cell in row.strip().strip("|").split("|")]
+        for row in raw_rows
+    ]
+    if len(parsed_rows) >= 2 and is_separator(raw_rows[1]):
+        parsed_rows.pop(1)
+        has_header = True
+    else:
+        has_header = False
+    return parsed_rows, has_header
+
+
+def _build_troubleshooting_blocks(lines: list[str]) -> list[dict]:
+    cleaned_lines = [line for line in lines if line.strip()]
+    if not cleaned_lines:
+        return []
+    rows, has_header = _parse_markdown_table(cleaned_lines)
+    if not rows:
+        return []
+    return [_table_block(rows, has_header)]
+
+
+def _build_next_action_blocks(lines: list[str]) -> list[dict]:
+    blocks: list[dict] = []
+    todo_pattern = re.compile(r"^[-*]\s+\[(?P<checked>[ xX])\]\s+(?P<text>.+)$")
+    for line in lines:
+        match = todo_pattern.match(line.strip())
+        if match:
+            blocks.append(
+                _todo_block(
+                    match.group("text").strip(),
+                    match.group("checked").lower() == "x",
+                )
+            )
+    return blocks
+
+
+def build_structured_doc_blocks(markdown_text: str) -> list[dict]:
+    sections = _extract_structured_sections(markdown_text)
+    if not sections:
+        return []
+
+    blocks: list[dict] = []
+    meta_blocks = _build_meta_blocks(sections.get("meta", []))
+    if meta_blocks:
+        blocks.append(_heading_block(2, "0. 메타"))
+        blocks.extend(meta_blocks)
+        blocks.append(_divider_block())
+
+    summary_blocks = _build_summary_blocks(sections.get("summary", []))
+    if summary_blocks:
+        blocks.append(_heading_block(2, "1. 작업 요약"))
+        blocks.extend(summary_blocks)
+        blocks.append(_divider_block())
+
+    troubleshooting_blocks = _build_troubleshooting_blocks(
+        sections.get("troubleshooting", [])
+    )
+    if troubleshooting_blocks:
+        blocks.append(_heading_block(2, "2. Troubleshooting & Decisions"))
+        blocks.extend(troubleshooting_blocks)
+        blocks.append(_divider_block())
+
+    next_action_blocks = _build_next_action_blocks(sections.get("next_actions", []))
+    if next_action_blocks:
+        blocks.append(_heading_block(2, "3. 다음 액션"))
+        blocks.extend(next_action_blocks)
+    # remove trailing divider if exists
+    if blocks and blocks[-1].get("type") == "divider":
+        blocks.pop()
+    return blocks
+
+
 def to_notion_blocks(markdown_text: str) -> list[dict]:
     blocks: list[dict] = []
     paragraph_buffer: list[str] = []
@@ -91,54 +282,6 @@ def to_notion_blocks(markdown_text: str) -> list[dict]:
         if not label:
             return "💬", "default"
         return icon_map.get(label.upper(), ("💬", "default"))
-
-    def _callout_block(content: str, icon: str, color: str) -> dict:
-        return {
-            "object": "block",
-            "type": "callout",
-            "callout": {
-                "rich_text": _rich_text(content),
-                "icon": {"emoji": icon},
-                "color": color,
-            },
-        }
-
-    def _divider_block() -> dict:
-        return {"object": "block", "type": "divider", "divider": {}}
-
-    def _todo_block(content: str, checked: bool) -> dict:
-        return {
-            "object": "block",
-            "type": "to_do",
-            "to_do": {"checked": checked, "rich_text": _rich_text(content)},
-        }
-
-    def _table_block(rows: list[list[str]], has_header: bool) -> dict:
-        table_width = max((len(row) for row in rows), default=0)
-
-        def _cells(row: list[str]) -> list[list[dict]]:
-            padded = row + [""] * (table_width - len(row))
-            return [[{"type": "text", "text": {"content": cell}}] for cell in padded]
-
-        children = [
-            {
-                "object": "block",
-                "type": "table_row",
-                "table_row": {"cells": _cells(row)},
-            }
-            for row in rows
-        ]
-
-        return {
-            "object": "block",
-            "type": "table",
-            "table": {
-                "table_width": table_width,
-                "has_column_header": has_header,
-                "has_row_header": False,
-                "children": children,
-            },
-        }
 
     def flush_paragraph() -> None:
         if not paragraph_buffer:
@@ -274,6 +417,8 @@ def create_notion_page(
         "Content-Type": "application/json",
         "Notion-Version": NOTION_VERSION,
     }
+    structured_blocks = build_structured_doc_blocks(markdown_text)
+    children = structured_blocks or to_notion_blocks(markdown_text)
     payload = {
         "parent": {"database_id": database_id},
         "properties": {
@@ -287,7 +432,7 @@ def create_notion_page(
                 ]
             }
         },
-        "children": to_notion_blocks(markdown_text),
+        "children": children,
     }
     response = requests.post(
         "https://api.notion.com/v1/pages", headers=headers, data=json.dumps(payload)
