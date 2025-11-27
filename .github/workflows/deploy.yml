@@ -15,10 +15,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Configure Git safe directory
+        run: |
+          git config --global --add safe.directory /home/iwh/stacknori/backend || true
+      
       - name: Update repository on server
         run: |
-          git config --global --add safe.directory /home/iwh/stacknori/backend
           cd /home/iwh/stacknori/backend
+          git config --global --add safe.directory /home/iwh/stacknori/backend || true
           git fetch origin main
           git reset --hard origin/main || echo "Git reset failed, continuing..."
       
