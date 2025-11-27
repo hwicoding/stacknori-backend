@@ -12,25 +12,28 @@
 ---
 
 ### 0. 메타
-- **Date**: YYYY-MM-DD
-- **Author**: @github-id
-- **Branch / Ref**: e.g. `feature/auth`
-- **Related Issue / Ticket**: ref link or `N/A`
+- **Date**: 2025-11-27
+- **Author**: @hwicoding
+- **Branch / Ref**: main
+- **Related Issue / Ticket**: Frontend API integration follow-up
 
 ### 1. 작업 요약
-- bullet 1
-- bullet 2
+- DOC_LOG GitHub Actions 반복 실행 문제 해결: workflow에 `github.actor != 'github-actions[bot]'` 조건 추가해 자동 커밋이 재트리거되지 않도록 단일화
+- 자료 progress 확장 설계안(`docs/PROGRESS_EXPANSION_PLAN.md`) 작성: `user_progress`에 `item_type`/`material_id`를 추가해 로드맵·자료를 단일 테이블로 관리하는 방향 확정
 
 ### 2. Troubleshooting & Decisions
 | 항목 | 내용 |
 | --- | --- |
-| 이슈 | ... |
-| 원인 분석 | ... |
-| 선택한 해결책 | ... |
-| 영향 범위/추가 조치 | ... |
+| 이슈 | DOC_LOG Sync 워크플로우가 자체 커밋으로 워크플로우를 다시 호출해 Actions가 3번씩 실행됨 |
+| 원인 분석 | `git-auto-commit-action`의 push가 다시 main 업데이트로 인식됨 |
+| 선택한 해결책 | 워크플로우에 `if: github.actor != 'github-actions[bot]'` 조건 추가하여 자동 커밋이 있을 때 job을 스킵 |
+| 영향 범위/추가 조치 | 이제 push 당 Run Tests + DOC_LOG가 한 번씩만 실행됨, 필요 시 추후 완전 통합 고려 |
+| 이슈 | 자료 완료(progress) 처리 방식을 결정해야 함 |
+| 선택한 해결책 | `item_type` 기반 단일 progress 테이블 유지(옵션 A) + `type` 파라미터로 API 확장 계획 수립 |
+| 영향 범위/추가 조치 | 마이그레이션/Repository/API 수정 로드맵 마련, 이후 구현 단계에서 적용 |
 
 ### 3. 다음 액션
-- [ ] TODO 1
-- [ ] TODO 2
+- [ ] 자료 progress 통합 마이그레이션 및 API 구현
+- [ ] CI에 새 API 통합 테스트 추가 및 문서화 자동화(Notion)에 API 변경 내역 연동
 
 
