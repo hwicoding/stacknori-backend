@@ -12,25 +12,25 @@
 ---
 
 ### 0. 메타
-- **Date**: YYYY-MM-DD
-- **Author**: @github-id
-- **Branch / Ref**: e.g. `feature/auth`
-- **Related Issue / Ticket**: ref link or `N/A`
+- **Date**: 2025-11-27
+- **Author**: @hwicoding
+- **Branch / Ref**: main
+- **Related Issue / Ticket**: N/A
 
 ### 1. 작업 요약
-- bullet 1
-- bullet 2
+- GitHub Actions 배포 워크플로우 및 Notion Dev-Journal 워크플로우 실행 시험
+- main 브랜치 push로 Self-hosted Runner 동작 확인
 
 ### 2. Troubleshooting & Decisions
 | 항목 | 내용 |
 | --- | --- |
-| 이슈 | ... |
-| 원인 분석 | ... |
-| 선택한 해결책 | ... |
-| 영향 범위/추가 조치 | ... |
+| 이슈 | 초기에 Notion 속성 부재로 400 validation_error |
+| 원인 분석 | Notion DB에 Date/Repository/Commit 속성이 없었음 |
+| 선택한 해결책 | 해당 속성들을 Date, Rich Text 타입으로 생성 |
+| 영향 범위/추가 조치 | 워크플로우 재실행 시 정상 완료, 추후 속성명 변경 금지 |
 
 ### 3. 다음 액션
-- [ ] TODO 1
-- [ ] TODO 2
+- [ ] Dockerfile 재작성
+- [ ] Clean Architecture 디렉토리 구조 설계
 
 
