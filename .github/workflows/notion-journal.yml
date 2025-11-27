@@ -1,10 +1,9 @@
 name: Update Notion Dev Journal
 
+# DISABLED: This workflow is replaced by notion-doc-log.yml
+# Keeping this file for reference but disabling triggers
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_dispatch:  # Only manual trigger, no auto-trigger on push
 
 jobs:
   update-journal:
