@@ -10,6 +10,7 @@ on:
 
 jobs:
   sync-log:
+    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     env:
       DOC_LOG_PATH: DOC_LOG.md
