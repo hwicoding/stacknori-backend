@@ -28,22 +28,22 @@ jobs:
       - name: Build Docker image
         run: |
           cd /home/iwh/stacknori
-          docker compose build web
+          docker-compose build web
       
       - name: Stop existing containers
         run: |
           cd /home/iwh/stacknori
-          docker compose down
+          docker-compose down
       
       - name: Start services
         run: |
           cd /home/iwh/stacknori
-          docker compose up -d
+          docker-compose up -d
       
       - name: Run database migrations
         run: |
           cd /home/iwh/stacknori
-          docker compose exec -T web alembic upgrade head || echo "No migrations to run"
+          docker-compose exec -T web alembic upgrade head || echo "No migrations to run"
         continue-on-error: true
       
       - name: Health check
