@@ -18,13 +18,21 @@ jobs:
       - name: Configure Git safe directory
         run: |
           git config --global --add safe.directory /home/iwh/stacknori/backend || true
+          git config --global --add safe.directory '*' || true
       
       - name: Update repository on server
         run: |
-          cd /home/iwh/stacknori/backend
+          export GIT_CONFIG_GLOBAL=/tmp/gitconfig_global
           git config --global --add safe.directory /home/iwh/stacknori/backend || true
-          git fetch origin main
-          git reset --hard origin/main || echo "Git reset failed, continuing..."
+          git config --global --add safe.directory '*' || true
+          if [ -d "/home/iwh/stacknori/backend" ]; then
+            cd /home/iwh/stacknori/backend
+            git config --global --add safe.directory /home/iwh/stacknori/backend || true
+            git fetch origin main || echo "Git fetch failed"
+            git reset --hard origin/main || echo "Git reset failed, continuing..."
+          else
+            echo "Directory /home/iwh/stacknori/backend does not exist, skipping..."
+          fi
       
       - name: Build Docker image (production)
         run: |
