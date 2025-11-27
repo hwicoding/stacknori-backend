@@ -12,25 +12,25 @@
 ---
 
 ### 0. 메타
-- **Date**: YYYY-MM-DD
-- **Author**: @github-id
-- **Branch / Ref**: e.g. `feature/auth`
-- **Related Issue / Ticket**: ref link or `N/A`
+- **Date**: 2025-11-27
+- **Author**: @hwicoding
+- **Branch / Ref**: main
+- **Related Issue / Ticket**: DOC_LOG → Notion 스타일 개선
 
 ### 1. 작업 요약
-- bullet 1
-- bullet 2
+- Notion Dev-Journal의 `Date/Repository/Commit` 컬럼을 자동 채우도록 `scripts/notion_sync.py`를 확장, DOC_LOG 메타 정보와 GitHub env를 파싱해 날짜·저장소 링크·커밋 링크를 모두 세팅
+- Notion에 링크 텍스트/아이콘이 적용되도록 Repository/Commit을 Rich text(깃허브 URL)로 구성, 날짜는 ISO 포맷으로 변환해 정렬이 가능한 date 속성으로 저장
 
 ### 2. Troubleshooting & Decisions
 | 항목 | 내용 |
 | --- | --- |
-| 이슈 | ... |
-| 원인 분석 | ... |
-| 선택한 해결책 | ... |
-| 영향 범위/추가 조치 | ... |
+| 이슈 | Notion DB에 Date/Repository/Commit 컬럼을 만들었지만 자동화가 값을 채우지 않아 수동 입력이 필요했음 |
+| 원인 분석 | 기존 스크립트가 `Name`/본문 block만 생성하고 데이터베이스 속성은 사용하지 않음 |
+| 선택한 해결책 | DOC_LOG `0. 메타` 섹션에서 key/value를 파싱하고, 깃허브 환경 변수(`GITHUB_REPOSITORY`, `GITHUB_SHA`)를 조합해 해당 컬럼 값을 구성 |
+| 영향 범위/추가 조치 | 앞으로 생성되는 모든 페이지가 표 형태 메타 + DB 컬럼 값을 동시에 갖게 되어 정렬/필터가 가능, 추가 컬럼 필요 시 동일 방식으로 확장 예정 |
 
 ### 3. 다음 액션
-- [ ] TODO 1
-- [ ] TODO 2
+- [ ] 자료 progress 통합 마이그레이션 및 API 구현
+- [ ] CI에 새 API 통합 테스트 추가 및 문서화 자동화(Notion)에 API 변경 내역 연동
 
 

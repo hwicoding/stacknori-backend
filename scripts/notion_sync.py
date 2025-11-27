@@ -142,20 +142,28 @@ def _extract_structured_sections(markdown_text: str) -> dict[str, list[str]]:
             sections[current_key].append(line)
 
     if any(filter(None, sections.values())):
-        return sections
+    return sections
     return {}
 
 
-def _build_meta_blocks(lines: list[str]) -> list[dict]:
-    rows = [["항목", "내용"]]
-    pattern = re.compile(r"^-\s*\*\*(.+?)\*\*:\s*(.+)$")
+META_PATTERN = re.compile(r"^-\s*\*\*(.+?)\*\*:\s*(.+)$")
+
+
+def _parse_meta_entries(lines: list[str]) -> list[tuple[str, str]]:
+    entries: list[tuple[str, str]] = []
     for line in lines:
-        match = pattern.match(line.strip())
+        match = META_PATTERN.match(line.strip())
         if match:
-            rows.append([match.group(1), match.group(2)])
-    if len(rows) == 1:
-        return []
-    return [_table_block(rows, has_header=True)]
+            entries.append((match.group(1).strip(), match.group(2).strip()))
+    return entries
+
+
+def _build_meta_blocks(lines: list[str]) -> tuple[list[dict], dict[str, str]]:
+    entries = _parse_meta_entries(lines)
+    if not entries:
+        return [], {}
+    rows = [["항목", "내용"]] + [[key, value] for key, value in entries]
+    return [_table_block(rows, has_header=True)], {k: v for k, v in entries}
 
 
 def _build_summary_blocks(lines: list[str]) -> list[dict]:
@@ -221,13 +229,13 @@ def _build_next_action_blocks(lines: list[str]) -> list[dict]:
     return blocks
 
 
-def build_structured_doc_blocks(markdown_text: str) -> list[dict]:
+def build_structured_doc_blocks(markdown_text: str) -> tuple[list[dict], dict[str, str]]:
     sections = _extract_structured_sections(markdown_text)
     if not sections:
-        return []
+        return [], {}
 
     blocks: list[dict] = []
-    meta_blocks = _build_meta_blocks(sections.get("meta", []))
+    meta_blocks, meta_map = _build_meta_blocks(sections.get("meta", []))
     if meta_blocks:
         blocks.append(_heading_block(2, "0. 메타"))
         blocks.extend(meta_blocks)
@@ -254,7 +262,7 @@ def build_structured_doc_blocks(markdown_text: str) -> list[dict]:
     # remove trailing divider if exists
     if blocks and blocks[-1].get("type") == "divider":
         blocks.pop()
-    return blocks
+    return blocks, meta_map
 
 
 def to_notion_blocks(markdown_text: str) -> list[dict]:
@@ -409,6 +417,48 @@ def to_notion_blocks(markdown_text: str) -> list[dict]:
     return blocks
 
 
+def _parse_date_value(raw: str | None) -> str | None:
+    if not raw:
+        return None
+    raw = raw.strip()
+    for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d"):
+        try:
+            return datetime.strptime(raw, fmt).date().isoformat()
+        except ValueError:
+            continue
+    try:
+        return datetime.fromisoformat(raw).date().isoformat()
+    except ValueError:
+        return None
+
+
+def _build_repository_text(repo: str | None) -> list[dict]:
+    if not repo:
+        return []
+    return [
+        {
+            "type": "text",
+            "text": {
+                "content": repo,
+                "link": {"url": f"https://github.com/{repo}"},
+            },
+        }
+    ]
+
+
+def _build_commit_text(repo: str | None, sha: str | None) -> list[dict]:
+    if not sha:
+        return []
+    short_sha = sha[:7]
+    link_url = f"https://github.com/{repo}/commit/{sha}" if repo else None
+    text_obj: dict = {
+        "content": short_sha,
+    }
+    if link_url:
+        text_obj["link"] = {"url": link_url}
+    return [{"type": "text", "text": text_obj}]
+
+
 def create_notion_page(
     token: str, database_id: str, title: str, markdown_text: str
 ) -> str:
@@ -417,8 +467,22 @@ def create_notion_page(
         "Content-Type": "application/json",
         "Notion-Version": NOTION_VERSION,
     }
-    structured_blocks = build_structured_doc_blocks(markdown_text)
+
+    structured_blocks, meta_map = build_structured_doc_blocks(markdown_text)
     children = structured_blocks or to_notion_blocks(markdown_text)
+
+    timestamp = datetime.now(timezone.utc).astimezone()
+    page_date = (
+        _parse_date_value(meta_map.get("Date"))
+        or timestamp.date().isoformat()
+    )
+
+    repo_from_meta = meta_map.get("Repository")
+    repo_from_env = os.environ.get("GITHUB_REPOSITORY")
+    repository_value = repo_from_meta or repo_from_env
+
+    commit_sha = os.environ.get("GITHUB_SHA")
+
     payload = {
         "parent": {"database_id": database_id},
         "properties": {
@@ -434,6 +498,18 @@ def create_notion_page(
         },
         "children": children,
     }
+
+    if page_date:
+        payload["properties"]["Date"] = {"date": {"start": page_date}}
+
+    repo_rich_text = _build_repository_text(repository_value)
+    if repo_rich_text:
+        payload["properties"]["Repository"] = {"rich_text": repo_rich_text}
+
+    commit_rich_text = _build_commit_text(repository_value, commit_sha)
+    if commit_rich_text:
+        payload["properties"]["Commit"] = {"rich_text": commit_rich_text}
+
     response = requests.post(
         "https://api.notion.com/v1/pages", headers=headers, data=json.dumps(payload)
     )
