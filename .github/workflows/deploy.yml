@@ -17,6 +17,7 @@ jobs:
       
       - name: Update repository on server
         run: |
+          git config --global --add safe.directory /home/iwh/stacknori/backend
           cd /home/iwh/stacknori/backend
           git fetch origin main
           git reset --hard origin/main || echo "Git reset failed, continuing..."
