@@ -18,9 +18,17 @@ scripts/           # 자동화 스크립트 (Notion sync 등)
 ## 빠른 시작
 ```bash
 cp example.env .env
+# .env 파일에서 DATABASE_URL이 postgresql+asyncpg:// 형식인지 확인
 docker compose up --build
 ```
 이후 `http://localhost:8000/docs`에서 API 스펙을 확인할 수 있습니다.
+
+### 중요: DATABASE_URL 형식
+**반드시 비동기 드라이버를 사용해야 합니다:**
+- ✅ 올바른 형식: `postgresql+asyncpg://user:password@host:port/dbname`
+- ❌ 잘못된 형식: `postgresql://user:password@host:port/dbname` (동기 드라이버)
+
+서버 환경에서는 `.env` 파일의 `DATABASE_URL`이 `postgresql+asyncpg://`로 시작하는지 확인하세요.
 
 ## 개발 시나리오
 1. DOC_LOG.md 템플릿에 작업 내용을 기록
