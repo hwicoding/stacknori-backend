@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import json
 from typing import Sequence
 
-from sqlalchemy import and_, cast, func, or_, select
+from sqlalchemy import and_, func, or_, select, String
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Material, MaterialDifficulty, MaterialType
@@ -31,11 +32,12 @@ class MaterialRepository:
         filters = []
         if keyword:
             ilike = f"%{keyword}%"
+            # title과 summary만 DB 레벨에서 검색
+            # keywords는 Python 레벨에서 필터링 (SQLite JSON 검색 이슈 회피)
             filters.append(
                 or_(
                     MaterialModel.title.ilike(ilike),
                     MaterialModel.summary.ilike(ilike),
-                    cast(MaterialModel.keywords, str).ilike(ilike),
                 )
             )
         if difficulty:
@@ -53,7 +55,21 @@ class MaterialRepository:
         offset = (page - 1) * limit
         stmt = stmt.offset(offset).limit(limit)
 
-        materials = await self.session.scalars(stmt)
+        materials_result = await self.session.scalars(stmt)
+        materials_list = list(materials_result)
+        
+        # keywords 검색은 Python 레벨에서 필터링
+        if keyword:
+            keyword_lower = keyword.lower()
+            materials_list = [
+                m for m in materials_list
+                if keyword_lower in m.title.lower()
+                or (m.summary and keyword_lower in m.summary.lower())
+                or (m.keywords and any(keyword_lower in str(k).lower() for k in (m.keywords or [])))
+            ]
+            # Python 필터링 후 total 재계산
+            total = len(materials_list)
+        
         scrap_ids: set[int] = set()
         if user_id:
             scrap_stmt = select(MaterialScrapModel.material_id).where(
@@ -64,7 +80,7 @@ class MaterialRepository:
         return (
             [
                 self._to_entity(model, is_scrapped=model.id in scrap_ids)
-                for model in materials
+                for model in materials_list
             ],
             total,
         )

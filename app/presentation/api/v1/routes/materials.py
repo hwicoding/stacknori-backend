@@ -6,10 +6,25 @@ from app.core.dependencies import (
     get_material_search_usecase,
 )
 from app.domain.entities import User
-from app.schemas import MaterialListResponse, ScrapResponse
+from app.schemas import MaterialItem, MaterialListResponse, ScrapResponse
 from app.usecases.material import SearchMaterialsUseCase, ToggleMaterialScrapUseCase
 
 router = APIRouter(prefix="/materials", tags=["Materials"])
+
+
+def _material_to_item(material) -> MaterialItem:
+    """Material 엔티티를 MaterialItem 스키마로 변환"""
+    return MaterialItem(
+        id=material.id,
+        title=material.title,
+        url=material.url,
+        difficulty=material.difficulty.value if hasattr(material.difficulty, "value") else material.difficulty,
+        type=material.type.value if hasattr(material.type, "value") else material.type,
+        source=material.source,
+        summary=material.summary,
+        keywords=material.keywords or [],
+        is_scrapped=material.is_scrapped,
+    )
 
 
 @router.get("", response_model=MaterialListResponse)
@@ -32,7 +47,11 @@ async def search_materials(
         page=page,
         limit=limit,
     )
-    return MaterialListResponse(**result)
+    items = [_material_to_item(m) for m in result["materials"]]
+    return MaterialListResponse(
+        materials=items,
+        pagination=result["pagination"],
+    )
 
 
 @router.post("/{material_id}/scrap", response_model=ScrapResponse)
